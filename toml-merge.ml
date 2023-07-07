@@ -13,6 +13,7 @@ let list_files_by_extension dir ext =
     |> Array.to_list
     |> List.filter (fun f -> Filename.extension f = ext)
     |> List.map (fun f -> Printf.sprintf "%s/%s" dir f)
+    |> List.sort compare
 
 let read_file f =
   Printf.printf "reading file: %s\n" f;
