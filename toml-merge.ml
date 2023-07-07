@@ -1,47 +1,65 @@
 #!/usr/bin/env ocaml
 
+let toml_ext = ".toml"
+
 let dir_is_empty dir =
   Array.length (Sys.readdir dir) = 0
 
-let print_list lst =
-  List.iter print_endline lst
-
 let list_files_by_extension dir ext =
   match dir_is_empty dir with
+  | true  -> []
   | false ->
     Sys.readdir dir
     |> Array.to_list
     |> List.filter (fun f -> Filename.extension f = ext)
     |> List.map (fun f -> Printf.sprintf "%s/%s" dir f)
-  | true  -> []
 
 let read_file f =
-   Printf.printf "reading file: %s\n" f;
+  Printf.printf "reading file: %s\n" f;
   let ic = open_in f in
   let content = really_input_string ic (in_channel_length ic) in
   close_in ic;
   content
 
-let merge_files_content c =
-  String.concat "\n" c
-
-let create_file_with_extension d n c e =
-  let f = Printf.sprintf "%s%s%s" d n e in
+let create_file_with_extension content dir name ext =
+  let f = Printf.sprintf "%s%s%s" dir name ext in
   let oc = open_out f in
-  output_string oc c;
+  output_string oc content;
   Printf.printf "saving into file: %s\n" f;
   close_out oc
 
-let run dir_in dir_out filename =
-  match list_files_by_extension dir_in ".toml" with
+let merge dir_in dir_out filename =
+  match list_files_by_extension dir_in toml_ext with
     | [] -> print_endline "No files found"
     | files ->
-        let file_contents = List.map read_file files in
-        let merged = merge_files_content (List.rev file_contents) in
-        create_file_with_extension dir_out filename merged ".toml";
-        print_list file_contents
+      files
+      |> List.map read_file
+      |> List.rev
+      |> String.concat "\n"
+      |> (fun c -> create_file_with_extension c dir_out filename toml_ext)
 
-let () =
-  match Sys.argv with
-  | [|_; dir_in; dir_out; filename |] -> run dir_in dir_out filename
-  | _ -> print_endline "Please provide a directory as a command-line argument"
+let dir_in = ref ""
+let dir_out = ref ""
+let output_file = ref ""
+
+let speclist =
+  [
+    ("-d", Arg.Set_string dir_in, "Directory to fetch the files from. Default: current");
+    ("-o", Arg.Set_string dir_out, "Directory to save the merged file. Default: current");
+    ("-n", Arg.Set_string output_file, "Filename of the merged file. Default: config");
+  ]
+
+let usage_msg = "toml-merge [-d] <./input_dir> [-o] <./output_dir> [-n] <filename>"
+ 
+let () = 
+  Arg.parse speclist (fun _ -> ()) usage_msg;
+  if !dir_in = "" then
+    dir_in := "./";
+
+  if !dir_out = "" then
+    dir_out := "./";
+
+  if !output_file = "" then
+    output_file := "config";
+
+  merge !dir_in !dir_out !output_file;
