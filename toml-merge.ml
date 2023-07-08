@@ -35,7 +35,7 @@ let merge dir_in dir_out filename =
       files
       |> List.map read_file
       |> String.concat "\n"
-      |> Printf.sprintf "# FILE GENERATED USING toml-merge: github.com/jeronimobarea/toml-merge\n%s\n"
+      |> Printf.sprintf "# FILE GENERATED USING toml-merge: github.com/jeronimobarea/toml-merge\n\n%s"
       |> (fun c -> create_file_with_extension c dir_out filename toml_ext)
 
 let dir_in = ref ""
