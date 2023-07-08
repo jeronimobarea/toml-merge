@@ -13,7 +13,6 @@ let list_files_by_extension dir ext =
     |> Array.to_list
     |> List.filter (fun f -> Filename.extension f = ext)
     |> List.map (fun f -> Printf.sprintf "%s/%s" dir f)
-    |> List.sort compare
 
 let read_file f =
   Printf.printf "reading file: %s\n" f;
@@ -35,7 +34,6 @@ let merge dir_in dir_out filename =
     | files ->
       files
       |> List.map read_file
-      |> List.rev
       |> String.concat "\n"
       |> (fun c -> create_file_with_extension c dir_out filename toml_ext)
 
